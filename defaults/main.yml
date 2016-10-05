@@ -1,0 +1,19 @@
+---
+# defaults file for ucsdlib.java
+
+java_version: '8'
+
+java_available:
+  '8':
+    build-i386: 8u101-b13/jdk-8u101-linux-i586.tar.gz
+    build-x86_64: 8u101-b13/jdk-8u101-linux-x64.tar.gz
+    directory: jdk1.8.0_101
+
+java_install_dir: /opt
+java_download_dir: /tmp
+java_set_default: true
+#java_set_compatibility_symlink: true
+
+java_webproxy: {}
+#  http_proxy: http://webproxy:3128/'
+# If you use this, rememer to remove the {}

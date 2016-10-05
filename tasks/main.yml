@@ -1,0 +1,71 @@
+---
+# tasks file for ucsdlib.java
+# Download and install Oracle Java
+# Based on https://github.com/hudecof/ansible_java
+
+- name: Is Java Installed Already?
+  stat:
+    path: '{{ java_install_dir ~ "/" ~ java_available[java_version]["directory"] ~ "/bin/java" }}'
+  register: bin_java
+
+- block:
+  - name: "Create Install Directory"
+    file:
+      path: '{{ java_install_dir }}'
+      state: directory
+    tags:
+      - java
+      - setup
+
+# TODO: Secure Directory
+  - name: "Download tar.gz file"
+    get_url:
+      url: 'http://download.oracle.com/otn-pub/java/jdk/{{ java_available[java_version]["build-"~ansible_architecture] }}'
+      dest: '{{ java_download_dir }}/oracle_java.tar.gz'
+      force: yes
+      headers:
+        'Cookie: oraclelicense=accept-securebackup-cookie'
+    environment:
+      '{{ java_webproxy | default ({}) }}'
+    tags:
+      - java
+      - setup
+
+  - name: "unpack java"
+    unarchive:
+      src: '{{ java_download_dir }}/oracle_java.tar.gz'
+      dest: '{{ java_install_dir }}'
+      copy: no
+    become: yes
+    tags:
+      - java
+      - setup
+
+  - name: remove install file
+    file:
+      path: '{{ java_download_dir }}/oracle_java.tar.gz'
+      state: absent
+    tags:
+      - java
+      - setup
+
+  when: not bin_java.stat.exists
+
+- name: Set Default Java
+  file:
+    path: '{{ java_install_dir }}/java'
+    src: '{{ java_install_dir ~ "/" ~ java_available[java_version]["directory"] }}'
+    state: link
+  become: true
+  when: java_set_default
+  ignore_errors: '{{ ansible_check_mode }}'
+
+- name: Set Compatibility Symlinks
+  file:
+    path: /usr/local/bin/{{ item }}
+    src: '{{ java_install_dir }}/java/bin/{{ item }}'
+    state: link
+  with_items:
+    - java
+  when: java_set_compatibility_symlink | default (false)
+  become: true
