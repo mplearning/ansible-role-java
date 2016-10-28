@@ -36,7 +36,6 @@
       src: '{{ java_download_dir }}/oracle_java.tar.gz'
       dest: '{{ java_install_dir }}'
       copy: no
-    become: yes
     tags:
       - java
       - setup
@@ -56,7 +55,6 @@
     path: '{{ java_install_dir }}/java'
     src: '{{ java_install_dir ~ "/" ~ java_available[java_version]["directory"] }}'
     state: link
-  become: true
   when: java_set_default
   ignore_errors: '{{ ansible_check_mode }}'
 
@@ -68,4 +66,3 @@
   with_items:
     - java
   when: java_set_compatibility_symlink | default (false)
-  become: true
