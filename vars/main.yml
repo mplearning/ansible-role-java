@@ -1,0 +1,13 @@
+---
+# Oracle Java Specific
+
+java_architecture_lookup:
+  #ansbile_architecture -> oracle architecture
+  x86_64: 'x64'
+  i386: 'i586'
+
+java_architecture: '{{ java_architecture_lookup[ansible_architecture] }}'
+java_checksum_uri: 'https://www.oracle.com/webfolder/s/digest/{{ java_version }}checksum.html'
+java_download_uri: '{{ java_uri_prepath }}/{{ java_version }}-{{ java_available[java_version]["build"]}}/jdk-{{ java_version }}-linux-{{ java_architecture_lookup[ansible_architecture] }}.tar.gz'
+java_unpacked_directory: '{{ java_version | regex_replace("(\d)u(\d+)", "jdk1.\1.0_\2")}}'
+java_uri_prepath: http://download.oracle.com/otn-pub/java/jdk

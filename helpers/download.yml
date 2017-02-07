@@ -1,0 +1,28 @@
+---
+- hosts: localhost
+
+  vars_files:
+  - ../defaults/main.yml
+  - ../vars/main.yml
+
+  tasks:
+  - name: "Create files directory"
+    file:
+      name: ../files
+      state: directory
+
+  - name: "Download tgz file"
+    get_url:
+      url: '{{ java_download_uri }}'
+      dest: '../files/{{ java_download_uri | basename }}'
+      force: '{{ java_force_download | default (false) }}'
+      headers:
+        'Cookie: oraclelicense=accept-securebackup-cookie'
+      checksum: '{{ java_available[java_version]["checksum_" ~ java_architecture] | default ("") }}'
+    environment:
+      '{{ java_webproxy | default ({}) }}'
+
+  - name: 'Need checksums?'
+    debug:
+      msg: 'Please add the checksums available at {{ java_checksum_uri }}'
+    when: java_available[java_version]["checksum_" ~ java_architecture] is not defined

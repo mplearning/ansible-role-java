@@ -5,8 +5,11 @@
 
 - name: Is Java Installed Already?
   stat:
-    path: '{{ java_install_dir ~ "/" ~ java_available[java_version]["directory"] ~ "/bin/java" }}'
+    path: '{{ java_install_dir ~ "/" ~ java_unpacked_directory ~ "/bin/java" }}'
   register: bin_java
+  tags:
+    - java
+    - setup
 
 - block:
   - name: "Create Install Directory"
@@ -18,18 +21,33 @@
       - setup
 
 # TODO: Secure Directory
-  - name: "Download tar.gz file"
-    get_url:
-      url: 'http://download.oracle.com/otn-pub/java/jdk/{{ java_available[java_version]["build-"~ansible_architecture] }}'
-      dest: '{{ java_download_dir }}/oracle_java.tar.gz'
-      force: yes
-      headers:
-        'Cookie: oraclelicense=accept-securebackup-cookie'
-    environment:
-      '{{ java_webproxy | default ({}) }}'
-    tags:
-      - java
-      - setup
+
+  - block:
+    - name: "Copy cached tgz file, if available"
+      copy:
+       src: '{{ java_download_uri | basename }}'
+       dest: '{{ java_download_dir }}/oracle_java.tar.gz'
+      tags:
+        - java
+        - setup
+
+    rescue:
+
+    - name: "Download Upstream tgz file"
+      get_url:
+        url: '{{ java_download_uri }}'
+        dest: '{{ java_download_dir }}/oracle_java.tar.gz'
+        force: '{{ java_force_download | default (false) }}'
+        headers:
+          'Cookie: oraclelicense=accept-securebackup-cookie'
+        checksum: '{{ java_available[java_version]["checksum_" ~ java_architecture] | default ("") }}'
+      environment:
+        '{{ java_webproxy | default ({}) }}'
+      tags:
+        - java
+        - setup
+
+  # end block
 
   - name: "unpack java"
     unarchive:
@@ -53,10 +71,13 @@
 - name: Set Default Java
   file:
     path: '{{ java_install_dir }}/java'
-    src: '{{ java_install_dir ~ "/" ~ java_available[java_version]["directory"] }}'
+    src: '{{ java_install_dir ~ "/" ~ java_unpacked_directory }}'
     state: link
   when: java_set_default
   ignore_errors: '{{ ansible_check_mode }}'
+  tags:
+    - java
+    - setup
 
 - name: Set Compatibility Symlinks
   file:
@@ -66,3 +87,6 @@
   with_items:
     - java
   when: java_set_compatibility_symlink | default (false)
+  tags:
+    - java
+    - setup
