@@ -11,7 +11,7 @@ No external requirements.
 Role Variables
 --------------
 
-* `java_version`: Desired major version (8)
+* `java_version`: Desired major+build  version (8u121)
 * `java_install_dir`: Location  to install to (/opt)
 * `java_download_dir`: Location to download tarball to (/tmp)
 * `java_set_default`: Set "/opt/java" symlink (true)
